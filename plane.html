@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Plane</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.15.1/dist/phaser-arcade-physics.min.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+
+        class gameOver extends Phaser.Scene {
+
+            initialize() {
+                Phaser.Scene.call(this, { "key": "gameOver" });
+            }
+            preload() { }
+            create() {
+                this.add.text(325, 100, "Game Over", { font: "bold 75px ariel", fill: 'white', textAlign: 'center'});
+                this.add.text(450, 400, "Points: " + points, { font: "bold 30px ariel", fill: 'white', textAlign: 'center' });
+                var retryButton = this.add.text(450, 350, "Retry", { font: "bold 30px ariel", fill: 'white', textAlign: 'center' });
+                retryButton.setInteractive();
+                retryButton.on('pointerdown', () => {
+                    game.scene.add('planeGame', planeGame, true);
+                    this.scene.stop('gameOver');
+                    this.scene.remove('gameOver');
+                });
+                var menuButton = this.add.text(450,300, "Main Menu",{ font: "bold 30px ariel", fill: 'white', textAlign: 'center' });
+                menuButton.setInteractive();
+                menuButton.on('pointerdown', () => {
+                    game.scene.add('menu', menu, true);
+                    this.scene.stop('gameOver');
+                    this.scene.remove('gameOver');
+                });
+            }
+            update() { }
+        }
+
+        class menu extends Phaser.Scene {
+            initialize() {
+                Phaser.Scene.call(this, { "key": "menu" });
+            }
+            preload() {
+
+            }
+            create() {
+                this.add.text(350, 100, "Plane Test", { font: "bold 75px ariel", fill: 'white', textAlign: 'center' });
+                var playButton = this.add.text(450, 400, "PLAY", { font: "bold 30px ariel", fill: 'white', textAlign: 'center' });
+                playButton.setInteractive();
+                playButton.on('pointerdown', () => {
+                    game.scene.add('planeGame', planeGame, true);
+                    this.scene.stop('menu');
+                    this.scene.remove('menu');
+                });
+                var infoButton = this.add.text(425, 450, "Instructions", { font: "bold 30px ariel", fill: 'white', textAlign: 'center' });
+                infoButton.setInteractive();
+                infoButton.on('pointerdown', () => {
+                    game.scene.add('info', info, true);
+                    this.scene.stop('menu');
+                    this.scene.remove('menu');
+                })
+            }
+            update() { }
+        }
+
+        class info extends Phaser.Scene {
+            initialize() {
+                Phaser.Scene.call(this, { "key": "info" })
+            }
+            preload() { }
+            create() {
+                this.add.text(200, 400, "Check if the Red plane is left or right relative of the blue plane. \nIf plane positon is the same as text below press \"T\" if not press \"F\". \nIf there is a eye on screen look at the planes base of the eye's perspective.");
+                var returnButton = this.add.text(450, 500, "BACK", { font: "bold 30px ariel", fill: 'white', textAlign: 'center' });
+                returnButton.setInteractive();
+                returnButton.on('pointerdown', () => {
+                    game.scene.add('menu', menu, true);
+                    this.scene.stop('info');
+                    this.scene.remove('info');
+                })
+            }
+            update() { }
+        }
+
+        var config = {
+            type: Phaser.AUTO,
+            backgroundColor: '#4488aa',
+            physics: {
+                default: 'arcade'
+            }
+        };
+
+        var game = new Phaser.Game(config);
+        var bigPlane;
+        var smallPlane;
+        var randomPos;
+        var trueKey;
+        var falseKey;
+        var keyCheck;
+        var positionText;
+        var pointText;
+        var points;
+        var rotation;
+        var graphics;
+        var timer;
+        var eye;
+        var eyeFront;
+        var eyeLeft;
+        var eyeBack;
+        var eyeRight;
+        var gameOverCheck;
+
+
+        class planeGame extends Phaser.Scene {
+            constructor(config) {
+                super(config);
+            }
+            initialize() {
+                Phaser.Scene.call(this, { "key": "planeGame" });
+            }
+            preload() {
+
+                //load images
+                this.load.image('map', 'assets/finalMap.png');
+                this.load.svg('bigPlane', 'assets/Blue Plane2.svg');
+                this.load.svg('smallPlane', 'assets/Red Plane2.svg');
+                this.load.svg('eyeFront', 'assets/eye front.svg');
+                this.load.svg('eyeLeft', 'assets/eye left.svg');
+                this.load.svg('eyeRight', 'assets/eye right.svg');
+                this.load.svg('eyeBack', 'assets/eye back.svg');
+
+            }
+            create() {
+
+                //add image to scene
+                this.add.image(750, 300, 'map');
+                bigPlane = this.physics.add.image(Phaser.Math.Between(0, 400), Phaser.Math.Between(0, 400), 'bigPlane');
+                bigPlane.setOrigin(0.5, 0.5);
+                smallPlane = this.add.image(Phaser.Math.Between(0, 400), Phaser.Math.Between(0, 400), 'smallPlane').setScale(0.7);
+                smallPlane.setOrigin(0.5, 0.5);
+
+                //eye graphics
+                eyeFront = this.add.image(450, 100, 'eyeFront');
+                eyeBack = this.add.image(450, 625, 'eyeBack');
+                eyeLeft = this.add.image(100, 200, 'eyeLeft');
+                eyeRight = this.add.image(900, 200, 'eyeRight');
+                eyeFront.visible = false;
+                eyeBack.visible = false;
+                eyeLeft.visible = false;
+                eyeRight.visible = false;
+
+
+                //creates inputs for keys
+                randomPos = this.input.keyboard.addKey('R');
+                trueKey = this.input.keyboard.addKey('T')
+                falseKey = this.input.keyboard.addKey('F')
+
+                keyCheck = true;
+
+                points = 0;
+
+                //adds text box
+                positionText = this.add.text(450, 500, "Left", { font: "bold 30px ariel", fill: 'black', textAlign: 'center' });
+                pointText = this.add.text(50, 50, "Points: " + points, { font: "bold 30px ariel", fill: 'black', textAlign: 'center' });
+                //eye = this.add.text(50,75, "", {font: "bold 30px ariel", fill: 'black'} );
+
+                //adds timer
+                timer = this.time.addEvent({ delay: 6000, loop: false });
+                graphics = this.add.graphics({ x: 240, y: 36 });
+                gameOverCheck = true;
+
+                //var physics = Phaser.physics;
+                changePlanePosition();
+            }
+            update() {
+
+                //makes timer bar
+                graphics.clear();
+                timer.getProgress().toString().substr(0, 4);
+                graphics.fillStyle(0xe8eb34, 1);
+                graphics.fillRect(0, 0, 500 * timer.getProgress(), 8);
+
+
+                //randomly change plane position
+                if (randomPos.isDown && keyCheck) {
+
+                    changePlanePosition();
+
+                }
+
+                /*if (timer.getProgress() == 1) {
+                    if (gameOverCheck) {
+                        game.scene.add('gameOver', gameOver, true);
+                        gameOverCheck = false;
+                    }
+                    this.scene.stop('planeGame');
+                    this.scene.remove('planeGame');
+
+                }*/
+
+                if (eye) {
+                    //adds point if smaller plane is left of big plane and if the text box is "Left"
+                    if (falseKey.isDown && keyCheck) {
+
+                        if ((checkPlanePostion() == "Left" && positionText.text == 'Left') || (checkPlanePostion() == "Right" && positionText.text == 'Right')) {
+                            points++;
+                            pointText.text = 'Points: ' + points;
+                        }
+                        changePlanePosition();
+                    }
+
+                    //adds point if smaller plane is right of big plane and if the text box is "Right"
+                    if (trueKey.isDown && keyCheck) {
+                        if (checkPlanePostion() == "Left" && positionText.text == 'Right' || (checkPlanePostion() == "Right" && positionText.text == 'Left')) {
+                            points++;
+                            pointText.text = 'Points: ' + points;
+                        }
+                        changePlanePosition();
+                    }
+                }
+                else {
+                    if (trueKey.isDown && keyCheck) {
+
+                        if ((checkPlanePostion() == "Left" && positionText.text == 'Left') || (checkPlanePostion() == "Right" && positionText.text == 'Right')) {
+                            points++;
+                            pointText.text = 'Points: ' + points;
+                        }
+                        changePlanePosition();
+                    }
+
+                    //adds point if smaller plane is right of big plane and if the text box is "Right"
+                    if (falseKey.isDown && keyCheck) {
+                        if (checkPlanePostion() == "Left" && positionText.text == 'Right' || (checkPlanePostion() == "Right" && positionText.text == 'Left')) {
+                            points++;
+                            pointText.text = 'Points: ' + points;
+                        }
+                        changePlanePosition();
+                    }
+                }
+
+                //makes it so key cant be held down
+                if (randomPos.isDown || trueKey.isDown || falseKey.isDown) {
+                    keyCheck = false;
+                }
+                else {
+                    keyCheck = true;
+                }
+            }
+        }
+
+        game.scene.add('menu', menu, true);
+        var target = new Phaser.Math.Vector2();
+
+        //function to change plane position and change the text
+        function changePlanePosition() {
+            target.x = Phaser.Math.Between(150, 850);
+            target.y = Phaser.Math.Between(150, 400);
+            var dotTarget = Math.atan2(bigPlane.y - target.y, bigPlane.x - target.x) * 180 / Math.PI;
+            dotTarget = (bigPlane.angle - dotTarget) % 360;
+
+            bigPlane.angle = dotTarget;
+            //this.physics.World.enableBody();
+            //this.physics.world.enableBody(bigPlane);
+            this.physics.moveTo(bigPlane,target.x, target.y, 200);
+            //game.physics.moveTo(bigPlane, target.x, target.y, 200);
+
+            //bigPlane.setPosition(Phaser.Math.Between(150, 850), Phaser.Math.Between(150, 400));
+            smallPlane.setPosition(Phaser.Math.Between(150, 850), Phaser.Math.Between(150, 400));
+            rotation = Phaser.Math.Between(-100, 100);
+            bigPlane.angle += rotation;
+            smallPlane.angle = bigPlane.angle;
+
+            checkPlanePostion();
+
+            //randomize bottom text
+            if ((Phaser.Math.Between(0, 400) % 2) == 0) {
+                positionText.text = 'Left';
+            }
+            else {
+                positionText.text = 'Right';
+            }
+
+            //randomize eye
+            if ((Phaser.Math.Between(0, 400) % 2) == 0) {
+                //eye.text = "eye";
+                eye = true;
+            }
+            else {
+                //eye.text = " ";
+                eye = false;
+            }
+            console.log(eye);
+            eyePostion();
+        }        
+
+        function checkPlanePostion() {
+            var dot = Math.atan2(bigPlane.y - smallPlane.y, bigPlane.x - smallPlane.x) * 180 / Math.PI;
+            dot = (bigPlane.angle - dot) % 360;
+            
+
+            console.log(dot);
+            console.log(bigPlane.angle);
+            if (dot > 0) {
+                console.log("small is left big");
+                return "Left";
+            }
+            else if (dot < 0) {
+                console.log("small is right big");
+                return "Right";
+            }
+            else {
+                console.log("small parallel/antiparallel to big")
+            }
+        }
+
+        function eyePostion() {
+            if (eye) {
+                if (bigPlane.angle >= 45 && bigPlane.angle <= 135) {
+                    eyeFront.visible = true;
+                    eyeBack.visible = false;
+                    eyeLeft.visible = false;
+                    eyeRight.visible = false;
+                }
+                else if (bigPlane.angle < 45 && bigPlane.angle >= -45) {
+                    eyeLeft.visible = true;
+                    eyeFront.visible = false;
+                    eyeBack.visible = false;
+                    eyeRight.visible = false;
+                }
+                else if (bigPlane.angle < -45 && bigPlane.angle >= -135) {
+                    eyeBack.visible = true;
+                    eyeFront.visible = false;
+                    eyeLeft.visible = false;
+                    eyeRight.visible = false;
+                }
+                else if (bigPlane.angle > 135 || bigPlane.angle <= -135) {
+                    eyeRight.visible = true;
+                    eyeFront.visible = false;
+                    eyeBack.visible = false;
+                    eyeLeft.visible = false;
+                }
+            }
+            else {
+                eyeFront.visible = false;
+                eyeBack.visible = false;
+                eyeLeft.visible = false;
+                eyeRight.visible = false;
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>
