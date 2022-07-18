@@ -274,16 +274,14 @@
                 //dotTarget = (bigPlane.angle - dotTarget) % 360;
 
                 //bigPlane.angle = dotTarget;
-                console.log(target.x);
-                console.log(target.y);
-                //this.physics.world.enableBody(bigPlane);
-                this.physics.moveToObject(bigPlane, target, 200);
-
-                bigPlane.setPosition(Phaser.Math.Between(150, 850), Phaser.Math.Between(150, 400));
-                smallPlane.setPosition(Phaser.Math.Between(150, 850), Phaser.Math.Between(150, 400));
-                rotation = Phaser.Math.Between(-100, 100);
+                rotation = Phaser.Math.Between(-180, 180);
                 bigPlane.angle += rotation;
-                smallPlane.angle = bigPlane.angle;
+                let rot = (bigPlane.angle - 90) * Math.PI / -180;
+                let a = Math.sin(rot) * 500 + target.x;
+                let b = Math.cos(rot) * 500 + target.y;
+                bigPlane.setPosition(a, b);
+                smallPlane.setPosition(Phaser.Math.Between(150, 850), Phaser.Math.Between(150, 400));
+                this.physics.moveToObject(bigPlane, target, 200);
 
                 checkPlanePostion();
 
@@ -357,9 +355,6 @@
             var dot = Math.atan2(bigPlane.y - smallPlane.y, bigPlane.x - smallPlane.x) * 180 / Math.PI;
             dot = (bigPlane.angle - dot) % 360;
 
-
-            console.log(dot);
-            console.log(bigPlane.angle);
             if (dot > 0) {
                 console.log("small is left big");
                 return "Left";
