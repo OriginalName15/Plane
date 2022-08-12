@@ -398,11 +398,11 @@
 
                 //stops the planes when they get close to target
                 var distanceBig = Phaser.Math.Distance.Between(bigPlane.x, bigPlane.y, target.x, target.y);
-                if (distanceBig < 4) {
+                if (distanceBig < 7) {
                     bigPlane.body.reset(target.x, target.y);
                 }
                 var distanceSmall = Phaser.Math.Distance.Between(smallPlane.x, smallPlane.y, target2.x, target2.y);
-                if (distanceSmall < 4) {
+                if (distanceSmall < 7) {
                     smallPlane.body.reset(target2.x, target2.y);
                 }
             }
